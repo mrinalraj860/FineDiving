@@ -19,3 +19,34 @@ Epoch [17/20] Loss: 509.2229  Accuracy: 78.34%
 Epoch [18/20] Loss: 486.2103  Accuracy: 79.52%
 Epoch [19/20] Loss: 480.4178  Accuracy: 79.89%
 Epoch [20/20] Loss: 456.2666  Accuracy: 80.28%
+
+
+Entry                (00): 99.72%
+2.5 Soms.Pike        (01): 73.93%
+Back                 (02): 63.87%
+Forward              (03): 88.65%
+3.5 Soms.Tuck        (04): 90.80%
+Inward               (05): 94.16%
+Reverse              (06): 53.91%
+3.5 Soms.Pike        (07): 59.93%
+1.5 Twists           (08): 88.39%
+Arm.Back             (09): 92.47%
+0.5 Som.Pike         (10): 75.26%
+4.5 Soms.Tuck        (11): 58.20%
+2 Soms.Pike          (12): 86.67%
+1.5 Soms.Pike        (13): 32.74%
+2.5 Twists           (14): 72.22%
+2 Twists             (15): 77.91%
+1 Twist              (16): 60.00%
+2.5 Soms.Tuck        (17): 38.57%
+3 Soms.Tuck          (18): 73.08%
+3.5 Twists           (19): 45.45%
+3 Twists             (20): 79.31%
+0.5 Twist            (21): 31.82%
+3 Soms.Pike          (22): 10.00%
+Arm.Forward          (23): 0.00%
+1 Som.Pike           (24): 60.00%
+Arm.Reverse          (25): 0.00%
+1.5 Soms.Tuck        (26): 0.00%
+2 Soms.Tuck          (27): 50.00%
+4.5 Soms.Pike        (28): 0.00%
