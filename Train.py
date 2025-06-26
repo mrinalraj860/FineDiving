@@ -1,3 +1,7 @@
+import os
+import pickle
+from pathlib import Path
+import glob
 import torch
 from torch.utils.data import DataLoader
 import torch.nn as nn
@@ -5,67 +9,89 @@ import torch.optim as optim
 from Model import MotionCNN
 from DataLoader import MotionDataset, motion_collate_fn
 import matplotlib.pyplot as plt
-import os
 import pandas as pd
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_recall_fscore_support
 from torchinfo import summary
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
-from Model import MotionCNN  
+from MotionTransformer import MotionTransformer
+
+ANNOT_FOLDER = Path("/Users/mrinalraj/Downloads/WebDownload/drive-download-20250618T004611Z-1-001/FullAnnotated")
+TRAIN_PKL_PATH = "train_split.pkl"
+TEST_PKL_PATH = "test_split.pkl"
+VIDEO_EXTS = ("*.mp4", "*.avi", "*.mkv")
 
 
-PT_FOLDER = "videosTensors"
+def load_split(pkl_path):
+    with open(pkl_path, "rb") as f:
+        return pickle.load(f)
+
+
+def video_exists(video_name, idx):
+    for ext_pat in VIDEO_EXTS:
+        pattern = f"*{video_name}_{idx}*{ext_pat.lstrip('*')}"
+        if list(ANNOT_FOLDER.glob(pattern)):
+            return True
+    return False
+
+
+def check_split(split, split_name):
+    missing = []
+    for vid_name, vid_idx in split:
+        if not video_exists(vid_name, vid_idx):
+            missing.append((vid_name, vid_idx))
+
+    found = len(split) - len(missing)
+    print(f"\n── {split_name.upper()} SPLIT ──")
+    print(f"Expected videos : {len(split)}")
+    print(f"Found in folder : {found}")
+    print(f"Missing videos  : {len(missing)}")
+    return missing
+
+train_split = load_split(TRAIN_PKL_PATH)
+test_split = load_split(TEST_PKL_PATH)
+missing_train = check_split(train_split, "train")
+missing_test = check_split(test_split, "test")
+
+# === STEP 2: TRAINING SETUP ===
+PT_FOLDER = "Tracks"
 NUM_CLASSES = 29
 EPOCHS = 50
 BATCH_SIZE = 8
 LR = 1e-3
-DEVICE = "cpu"
-
-
-import pickle
-
-with open("/Users/mrinalraj/Documents/FineDiving/train_test_split/train_split.pkl", "rb") as f:
-    train_file_list = pickle.load(f)  
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 os.makedirs("plots", exist_ok=True)
-model = MotionCNN(num_classes=NUM_CLASSES).to(DEVICE)
-dataset = MotionDataset(PT_FOLDER, file_list=train_file_list)
-print(f"Dataset size: {len(dataset)}")
+model = MotionTransformer(num_classes=NUM_CLASSES).to(DEVICE)
+dataset = MotionDataset(PT_FOLDER)
 dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=motion_collate_fn)
 
 
-all_labels = [int(label) for _,label,x in dataset]
+all_labels = [int(label) for _, label, _ in dataset]
 present_classes = np.unique(all_labels)
-all_class_indices = np.arange(NUM_CLASSES)
-
-
 weights_present = compute_class_weight(class_weight='balanced', classes=present_classes, y=all_labels)
-
 full_weights = np.zeros(NUM_CLASSES, dtype=np.float32)
-
 for cls, w in zip(present_classes, weights_present):
     full_weights[cls] = w
-
-print("Class weights:", full_weights)
 class_weights_tensor = torch.tensor(full_weights, dtype=torch.float32).to(DEVICE)
 
 criterion = nn.CrossEntropyLoss(weight=class_weights_tensor)
 optimizer = optim.Adam(model.parameters(), lr=LR)
 
-
+print("Class weights:", full_weights)
 print("Classes in dataset:", np.unique(all_labels))
 missing = set(range(NUM_CLASSES)) - set(np.unique(all_labels))
 print("Missing classes in training set:", missing)
 
 summary(model, input_size=(1, 64, 1000, 3))
 
-from sklearn.metrics import precision_recall_fscore_support
 
 train_losses = []
 train_accuracies = []
 per_class_metrics = []
 all_preds = []
 all_targets = []
+
 for epoch in range(EPOCHS):
     model.train()
     total_loss = 0.0
@@ -112,10 +138,7 @@ for epoch in range(EPOCHS):
 df_metrics = pd.DataFrame(per_class_metrics)
 df_metrics.to_csv("plots/per_class_metrics.csv", index=False)
 
-
-
-
-torch.save(model.state_dict(), "motion_cnn_trained_CNN.pt")
+torch.save(model.state_dict(), "motion_cnn_trained_Transformer.pt")
 
 
 df = pd.DataFrame({
@@ -135,7 +158,6 @@ plt.grid(True)
 plt.savefig("plots/training_loss.png")
 plt.close()
 
-
 plt.figure(figsize=(8, 5))
 plt.plot(df['Epoch'], df['Accuracy (%)'], marker='s', color='blue')
 plt.title("Training Accuracy over Epochs")
@@ -144,7 +166,6 @@ plt.ylabel("Accuracy (%)")
 plt.grid(True)
 plt.savefig("plots/training_accuracy.png")
 plt.close()
-
 
 plt.figure(figsize=(10, 6))
 plt.plot(df['Epoch'], df['Loss'], label="Loss", color='red', marker='o')
@@ -157,7 +178,6 @@ plt.grid(True)
 plt.savefig("plots/training_combined.png")
 plt.close()
 
-
 cm = confusion_matrix(all_targets, all_preds, labels=list(range(NUM_CLASSES)))
 disp = ConfusionMatrixDisplay(confusion_matrix=cm)
 disp.plot(xticks_rotation=45, cmap='Blues')
@@ -166,4 +186,4 @@ plt.tight_layout()
 plt.savefig("plots/confusion_matrix.png")
 plt.close()
 
-print("Training complete. Metrics, plots, and confusion matrix saved in 'plots/' folder.")
+print("\nTraining complete. Metrics, plots, and confusion matrix saved in 'plots/' folder.")

@@ -15,6 +15,6 @@ class MotionCNN(nn.Module):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.pool(x)
-        x = x.reshape(x.size(0), -1)  # ✅ reshape is safer after permute/pooling
+        x = x.reshape(x.size(0), -1)  # reshape is safer after permute/pooling
         x = F.relu(self.fc1(x))
         return self.fc2(x)

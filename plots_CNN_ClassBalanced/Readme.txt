@@ -77,4 +77,4 @@ Epoch [47/50] Loss: 272.9230  Accuracy: 88.09%
 Epoch [48/50] Loss: 267.0653  Accuracy: 88.98%
 Epoch [49/50] Loss: 249.0196  Accuracy: 90.31%
 Epoch [50/50] Loss: 301.7428  Accuracy: 87.83%
-✅ Training complete. Metrics, plots, and confusion matrix saved in 'plots/' folder.
+Training complete. Metrics, plots, and confusion matrix saved in 'plots/' folder.

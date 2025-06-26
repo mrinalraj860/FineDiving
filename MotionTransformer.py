@@ -11,7 +11,7 @@ class PointSelfAttention(nn.Module):
         self.to_qkv = nn.Linear(dim, dim * 3, bias=False)
         self.proj = nn.Linear(dim, dim)
 
-    def forward(self, x):  # x: [B*T, N, dim]
+    def forward(self, x):
         B, N, C = x.shape
         H = self.heads
         qkv = self.to_qkv(x).chunk(3, dim=-1)  # each: [B*N, N, dim]
@@ -42,10 +42,9 @@ class MotionTransformer(nn.Module):
         self.max_frames = max_frames
         self.pooling = pooling
 
-        # Embedding for each 3D point
         self.embedding = nn.Linear(input_dim, hidden_dim)
 
-        # Point-wise attention module
+
         self.point_attn = nn.Sequential(
             PointSelfAttention(hidden_dim, heads=4),
             nn.LayerNorm(hidden_dim),
@@ -54,14 +53,14 @@ class MotionTransformer(nn.Module):
             nn.Dropout(dropout),
         )
 
-        # Positional encoding for frames
+
         self.positional_encoding = nn.Parameter(torch.randn(1, max_frames + 1, hidden_dim))
 
-        # CLS token
+
         self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_dim))
         nn.init.trunc_normal_(self.cls_token, std=0.02)
 
-        # Transformer encoder for temporal modeling
+  
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=hidden_dim,
             nhead=num_heads,
@@ -72,7 +71,7 @@ class MotionTransformer(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
-        # Classifier
+
         self.classifier = nn.Sequential(
             nn.LayerNorm(hidden_dim),
             nn.Linear(hidden_dim, hidden_dim),
@@ -84,29 +83,29 @@ class MotionTransformer(nn.Module):
     def forward(self, x):  # x: [B, T, N, 3]
         B, T, N, D = x.shape
         x = x.view(B * T, N, D)
-        x = self.embedding(x)  # [B*T, N, hidden_dim]
+        x = self.embedding(x)  
 
-        # Point-wise self-attention
+        
         residual = x
         x = self.point_attn(x)
-        x = x + residual  # Residual connection
-        x = x.mean(dim=1)  # Global pooling over points [B*T, hidden_dim]
+        x = x + residual  
+        x = x.mean(dim=1)  
 
-        # Reshape to [B, T, hidden_dim]
+     
         x = x.view(B, T, self.hidden_dim)
 
-        # Add CLS token
+  
         cls_token = self.cls_token.expand(B, -1, -1)
-        x = torch.cat([cls_token, x], dim=1)  # [B, T+1, hidden_dim]
+        x = torch.cat([cls_token, x], dim=1)  
 
-        # Add positional encoding
+        
         pe = self.positional_encoding[:, :x.size(1), :]
         x = x + pe
 
-        # Temporal modeling
-        x = self.transformer(x)  # [B, T+1, hidden_dim]
+        
+        x = self.transformer(x)  
 
-        # Use CLS token output
+        
         x = x[:, 0]
 
-        return self.classifier(x)  # [B, num_classes]
+        return self.classifier(x) 

@@ -4,4 +4,6 @@ drive_videos/
 drive_Frames/
 downloaded_drive_folder/
 Download/
-motion_cnn_trained.pt
+videosTensors/
+
+*.pt

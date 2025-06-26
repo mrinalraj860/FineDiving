@@ -67,9 +67,37 @@ index_to_class = {
 }
 # print(f"Original to Index Mapping: {index_to_class[4]}")
 
+import pickle
+
 class MotionDataset(Dataset):
-    def __init__(self, pt_folder):
-        self.pt_files = [os.path.join(pt_folder, f) for f in os.listdir(pt_folder) if f.endswith('.pt')]
+    def __init__(self, pt_folder, file_list=None, annotation_folder='/Users/mrinalraj/Downloads/WebDownload/drive-download-20250618T004611Z-1-001/FullAnnotated'):
+        self.pt_files = []
+
+        for x, y in file_list:
+            file_prefix = f"{x}_{y}"
+            video_file = os.path.join(annotation_folder, f"queries_{file_prefix}.mp4")
+            # print(f"Processing {file_prefix}: Video file {video_file}")
+            if not os.path.exists(video_file):
+                print(f" Skipping {file_prefix}: Video not found")
+                continue
+
+            # Find all .pt files that match the prefix (e.g., FINA_xyz_seg_*.pt)
+            matching_pt_files = [
+                f for f in os.listdir(pt_folder)
+                if f.startswith(file_prefix + "_seg_") and f.endswith("_tracking.pt")
+            ]
+
+            if not matching_pt_files:
+                print(f" Skipping {file_prefix}: No matching .pt files found")
+                continue
+
+            for pt_file in matching_pt_files:
+                full_path = os.path.join(pt_folder, pt_file)
+                if os.path.exists(full_path):
+                    self.pt_files.append(full_path)
+
+        if not self.pt_files:
+            raise ValueError(" No valid .pt files found matching the provided list.")
 
     def __len__(self):
         return len(self.pt_files)
@@ -77,23 +105,12 @@ class MotionDataset(Dataset):
     def __getitem__(self, idx):
         data = torch.load(self.pt_files[idx])
         seg_len, num_points = data['shape_info']
-        
-        pred_tracks = data['pred_tracks'].reshape(seg_len, num_points, 2)      # [T, 1000, 2]
-        pred_vis = data['pred_visibility'].reshape(seg_len, num_points, 1)     # [T, 1000, 1]
-
-        # Normalize x, y to [0, 1]
-        pred_tracks = pred_tracks / 512  # Assuming max width-height is 512
-
-        input_tensor = torch.cat([pred_tracks, pred_vis], dim=-1)  # [T, 1000, 3]
-        # print(f"Loaded {self.pt_files[idx]}: shape {input_tensor.shape}")
-        label = int(data['label'])
-        # print(f"Original Label: {label}")
-        label = original_to_index[label]
-        label = torch.tensor(label).long()
-        # print(f"Label: {label} ({index_to_class[label.item()]})")
-        return input_tensor, label, self.pt_files[idx]  # return path for visualization
-    
-
+        pred_tracks = data['pred_tracks'].reshape(seg_len, num_points, 2)
+        pred_vis = data['pred_visibility'].reshape(seg_len, num_points, 1)
+        pred_tracks = pred_tracks / 512
+        input_tensor = torch.cat([pred_tracks, pred_vis], dim=-1)
+        label = original_to_index[int(data['label'])]
+        return input_tensor, torch.tensor(label).long(), self.pt_files[idx]
 
 def motion_collate_fn(batch):
     """
