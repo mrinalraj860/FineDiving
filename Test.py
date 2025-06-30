@@ -1,23 +1,22 @@
-# === TEST SPLIT EVALUATION =====================================================
-from sklearn.metrics import classification_report
 import torch
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 from Model import MotionCNN
-from DataLoaderOnlyTracks import MotionDataset, motion_collate_fn
+from DataLoader import MotionDataset, motion_collate_fn
 import matplotlib.pyplot as plt
 import os
-from CNNJustPred import MotionCNN
 import pandas as pd
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from torchinfo import summary
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
 import pickle
+from sklearn.metrics import classification_report
+from Model import MotionCNN  
 
 BATCH_SIZE = 8
-PT_FOLDER = "videosTensors"
+PT_FOLDER = "videosTensors100"
 DEVICE = "cpu"  
 NUM_CLASSES = 29
 

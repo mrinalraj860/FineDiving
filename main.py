@@ -14,7 +14,7 @@ import numpy as np
 from Model import MotionCNN  
 
 
-PT_FOLDER = "videosTensors"
+PT_FOLDER = "videosTensors100"
 NUM_CLASSES = 29
 EPOCHS = 50
 BATCH_SIZE = 8
