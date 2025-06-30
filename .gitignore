@@ -5,5 +5,7 @@ drive_Frames/
 downloaded_drive_folder/
 Download/
 videosTensors/
+FullAnnotated/
+videosTensors100/
 
 *.pt

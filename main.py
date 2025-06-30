@@ -167,3 +167,8 @@ plt.savefig("plots/confusion_matrix.png")
 plt.close()
 
 print("Training complete. Metrics, plots, and confusion matrix saved in 'plots/' folder.")
+
+
+
+#points that matter 
+#different task for this dataset is labbel for 

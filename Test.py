@@ -5,16 +5,15 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 from Model import MotionCNN
-from DataLoader import MotionDataset, motion_collate_fn
+from DataLoaderOnlyTracks import MotionDataset, motion_collate_fn
 import matplotlib.pyplot as plt
 import os
-from Model import MotionCNN
+from CNNJustPred import MotionCNN
 import pandas as pd
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from torchinfo import summary
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
-from Model import MotionCNN  
 import pickle
 
 BATCH_SIZE = 8

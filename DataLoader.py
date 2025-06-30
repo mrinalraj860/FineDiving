@@ -70,7 +70,7 @@ index_to_class = {
 import pickle
 
 class MotionDataset(Dataset):
-    def __init__(self, pt_folder, file_list=None, annotation_folder='/Users/mrinalraj/Downloads/WebDownload/drive-download-20250618T004611Z-1-001/FullAnnotated'):
+    def __init__(self, pt_folder, file_list=None, annotation_folder='/Users/mrinalraj/Downloads/WebDownload/Preprocess/FullAnnotated'):
         self.pt_files = []
 
         for x, y in file_list:
